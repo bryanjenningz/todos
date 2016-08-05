@@ -1,0 +1,36 @@
+<!doctype html>
+<html ng-app="todosApp">
+  <head>
+    <meta charset="utf-8">
+    <title>Todos Angular</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular.js"></script>
+  </head>
+  <body ng-controller="todosCtrl">
+    <form ng-submit="addTodo()"><input ng-model="input"><button>Add Todo</button></form>
+    <div ng-repeat="todo in todos track by $index"><span ng-click="removeTodo($index)">{{todo}}</span></div>
+    <script>
+      angular.module('todosApp', []).controller('todosCtrl', ['$scope', todosCtrl]);
+      function todosCtrl($scope) {
+        $scope.input = '';
+        $scope.todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+        $scope.addTodo = save(function() {
+          if ($scope.input) { $scope.todos.push($scope.input); }
+          $scope.input = '';
+        });
+
+        $scope.removeTodo = save(function(index) {
+          $scope.todos.splice(index, 1);
+        });
+
+        function save(func) {
+          return function() {
+            var result = func.apply(null, arguments);
+            localStorage.setItem('todos', JSON.stringify($scope.todos));
+            return result;
+          };
+        }
+      }
+    </script>
+  </body>
+</html>
