@@ -9,26 +9,47 @@
     <form ng-submit="addTodo()"><input ng-model="input"><button>Add Todo</button></form>
     <div ng-repeat="todo in todos track by $index"><span ng-click="removeTodo($index)">{{todo}}</span></div>
     <script>
-      angular.module('todosApp', []).controller('todosCtrl', ['$scope', todosCtrl]);
-      function todosCtrl($scope) {
+      angular.module('todosApp', []).controller('todosCtrl', ['$scope', '$http', todosCtrl]);
+      function todosCtrl($scope, $http) {
         $scope.input = '';
-        $scope.todos = JSON.parse(localStorage.getItem('todos')) || [];
+        $scope.todos = [];
 
-        $scope.addTodo = save(function() {
-          if ($scope.input) { $scope.todos.push($scope.input); }
+        request('GET', '/api/todos');
+
+        $scope.addTodo = function() {
+          if ($scope.input) {
+            $scope.todos.push($scope.input);
+            request('POST', '/api/todos', {todo: $scope.input});
+          }
           $scope.input = '';
-        });
+        };
 
-        $scope.removeTodo = save(function(index) {
-          $scope.todos.splice(index, 1);
-        });
+        $scope.removeTodo = function(index) {
+          $http({
+            method: 'DELETE',
+            url: '/api/todos/' + index
+          }).then(function(res) {
+            console.log(res);
+            $scope.todos.splice(index, 1);
+          }, function(err) {
+            console.log(err);
+          });
+        };
 
-        function save(func) {
-          return function() {
-            var result = func.apply(null, arguments);
-            localStorage.setItem('todos', JSON.stringify($scope.todos));
-            return result;
-          };
+        function request(method, url, data) {
+          $http({
+            method: method,
+            url: url,
+            data: data
+          }).then(update, log);
+        }
+
+        function update(response) {
+          $scope.todos = response.data;
+        }
+
+        function log(err) {
+          console.log(err);
         }
       }
     </script>
